@@ -46,29 +46,23 @@ def load_fixture_data():
     teams = teams.rename(columns={'team.tla': 'short_name'})
     teams.sort_values('team.name', inplace=True)
 
-    team_colours = ['#183b90', '#009ee0', '#e21a23', '#ec4040',
-                    '#009edc', '#8d8d8d', '#f18a01', '#3a64a3',
-                    '#0053a0', '#e40f1b', '#00367a', '#00a650',
-                    '#fff500', '#323c9c', '#0799d5', '#1a59a3',
-                    '#ee2227', '#4681cf', '#ee1338', '#e1393e', 
-                    '#030303', '#fff002', '#173675', '#007b4d']
-    teams['colours'] = team_colours
     teams = teams.rename(columns={'team.id': 'id'})
 
     # replace Sheffield Wednesday short name, as it is the same as Sheffield United's
     teams.loc[teams.id==345, 'short_name'] = "SHW"
 
     # create dictionary of team crests
-    team_crest = {}
-    for row in teams.itertuples():
-        crest_id = f"https://raw.githubusercontent.com/MatthewG375/Prem-Table/refs/heads/main/Logos/ELC/{row.id}.png"
-        crest_id = f"Logos/ELC/{row.id}.png"
-        loaded_crest = Image.open(crest_id)
-        # loaded_crest = Image.open(requests.get(crest_id,
-        #                                        stream=True,
-        #                                        timeout=10).raw).convert('RGBA')
-        team_crest[row.id] = loaded_crest
+    cur_dir = Path(__file__).resolve().parent
+    logo_dir = cur_dir / '..' / '..' / '..' / 'Logos' / 'ELC'
 
+    team_crest = {
+        row.id: Image.open(logo_dir / f"{row.id}.png").convert("RGBA")
+        for row in teams.itertuples()
+    }
+
+    teams["colours"] = [
+        img.info.get("primary_color") for img in team_crest.values()
+    ]
 
     def get_start_time(row):
         fix_time = datetime.strptime(row, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
