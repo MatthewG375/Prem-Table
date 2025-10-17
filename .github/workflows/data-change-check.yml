@@ -70,7 +70,15 @@ jobs:
       - name: Save new hash file
         run: echo "${{ steps.pl_hash.outputs.new_pl_hash }}" > .last_pl_data_hash
 
+      - name: Delete existing cache on data change
+        if: ${{ steps.compare.outputs.pl_changed == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh cache delete pl-data-hash --repo ${{ github.repository }} || echo "No cache to delete"
+
       - name: Save hash to cache
+        if: ${{ steps.compare.outputs.pl_changed == 'true' }}
         uses: actions/cache/save@v4
         with:
           path: .last_pl_data_hash
