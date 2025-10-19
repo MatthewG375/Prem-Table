@@ -6,7 +6,8 @@ on:
     - cron: "0 0 * * *"
 
 permissions:
-  contents: write 
+  contents: write
+  actions: write
 
 jobs:
   check_data:
